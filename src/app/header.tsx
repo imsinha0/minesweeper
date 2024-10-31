@@ -1,46 +1,55 @@
+"use client";
 
 import Link from "next/link"
+import { SpeakerLoudIcon, SpeakerOffIcon, SunIcon, MoonIcon } from '@radix-ui/react-icons';
+import { createContext, useContext, useState } from 'react';
 
 import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuIndicator,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-  NavigationMenuViewport,
-} from "@/components/ui/navigation-menu"
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuGroup,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuPortal,
+} from "@/components/ui/dropdown-menu"
+
+const SettingsContext = createContext({
+  volume: "on",
+  setVolume: (volume: "on" | "off") => {},
+});
 
 
-export default function Header() {
-    return(
-      //create vertical space
-      <div className="mt-3">
-    <NavigationMenu>
-      <NavigationMenuList>
-      <NavigationMenuItem>
-          <Link href="/" legacyBehavior passHref>
-            <NavigationMenuLink className="text-4xl p-4 m-2 mt-300 rounded-lg text-black-800 hover:text-blue-600">
-              Minesweeper
-            </NavigationMenuLink>
-          </Link>
-        </NavigationMenuItem>
-      </NavigationMenuList>
 
-      <NavigationMenuList>
-      <NavigationMenuItem>
-          <Link href="/" legacyBehavior passHref>
-            <NavigationMenuLink className="text-4xl p-4 m-2 mt-300 rounded-lg text-black-800 hover:text-blue-600">
-              Minesweeper
-            </NavigationMenuLink>
-          </Link>
-        </NavigationMenuItem>
-      </NavigationMenuList>
+function Header() {
 
-    </NavigationMenu>
-    </div>
+  const settings = useContext(SettingsContext);
 
-)
-    
+  function handleChangeVolume() {
+    settings.setVolume((volume) => (volume === "on" ? "off" : "on"));
   }
+
+      return (
+<nav className="p-4">
+  <div className="mx-auto flex justify-between items-center">
+        <Link href="/" className="text-4xl hover:text-blue-600">
+        Minesweeper
+        </Link>
+
+        <div className="flex space-x-4 items-center">
+        <Link href="/" className="text-xl hover:text-blue-600">
+        Username
+        </Link>
+        <Link href="/" className="text-4xl font-bold hover:text-blue-600">
+          <SpeakerLoudIcon/>
+        </Link>
+        </div>
+
+  </div>
+</nav>
+)}
+
+export default Header;
