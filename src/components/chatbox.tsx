@@ -51,9 +51,8 @@ export default function Chatbox() {
                     timestamp: new Date(),
                 });
                 alert("Message sent successfully!");
-            } catch (error) {
+            } catch  {
                 console.log("oof");
-                console.error("Error adding message: ", error);
             }
 
         }
