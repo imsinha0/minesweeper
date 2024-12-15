@@ -2,9 +2,9 @@
 
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { React, useState, useEffect } from "react";
+import {useState, useEffect } from "react";
 import { db } from "@/firebaseConfig"; // Import Firestore instance
-import { collection, addDoc, onSnapshot, query, orderBy } from "firebase/firestore";
+import { collection, addDoc, onSnapshot, query, orderBy, Timestamp } from "firebase/firestore";
 
 interface Message {
     id: string;
@@ -27,19 +27,21 @@ export default function Chatbox() {
     };
 
     const handleSendMessage = async (message: string) => {
+        
         try {
             if (message.trim()) {
-                await addDoc(messagesCollection, { 
+                const docRef = await addDoc(messagesCollection, { 
                     text: message, 
-                    timestamp: Date.now(),
+                    timestamp: Timestamp.now(),
                     username: "Anonymous", // Change this to dynamic username if needed
                 });
+                console.log("document written with ID: ", docRef.id);
             }
         } catch (error) {
             console.error("Error adding message: ", error);
         }
     };
-
+    
     useEffect(() => {
         const q = query(messagesCollection, orderBy("timestamp"));
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -47,6 +49,8 @@ export default function Chatbox() {
         });
         return () => unsubscribe();
     }, []);
+    
+
 
     return (
         <div className="bg-white shadow-lg rounded-lg p-4">
