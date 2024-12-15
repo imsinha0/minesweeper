@@ -12,6 +12,7 @@ interface Message {
     username: string;
     text: string;
     timestamp: Date;
+    color: string;
 }
 
 const messagesCollection = collection(db, "messages");
@@ -19,10 +20,10 @@ const messagesCollection = collection(db, "messages");
 export default function Chatbox() {
     const [message, setMessage] = useState("");
     const [messages, setMessages] = useState<Message[]>([]);
-    const username = useUser().username;
+    const { username, color } = useUser();
 
-    // Ref to handle scrolling
-    const scrollAreaRef = useRef<HTMLDivElement>(null);
+    // Ref for the last message element to scroll to it
+    const lastMessageRef = useRef<HTMLDivElement | null>(null);
 
     const handleKeyPress = async (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === "Enter") {
@@ -38,6 +39,7 @@ export default function Chatbox() {
                     text: message,
                     timestamp: Timestamp.now(),
                     username: username,
+                    color: color,
                 });
                 console.log("document written with ID: ", docRef.id);
             }
@@ -51,27 +53,30 @@ export default function Chatbox() {
         const unsubscribe = onSnapshot(q, (snapshot) => {
             setMessages(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Message)));
         });
+
         return () => unsubscribe();
     }, []);
 
-    const scrollToBottom = () => {
-        scrollAreaRef.current?.scrollIntoView(false)
-    }
-    // Scroll to the bottom whenever messages change
     useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
+        // Scroll to the last message when messages are updated
+        if (lastMessageRef.current) {
+            lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+    }, [messages]); // Dependency on messages to trigger scrolling
 
     return (
-        <div className="bg-white shadow-lg rounded-lg p-4">
-            <p className="text-center">Lobby Chat</p>
+        <div className="bg-white shadow-lg rounded-lg p-4 text-sm">
+            <p className="text-center text-sm">Lobby Chat</p>
 
-            <ScrollArea ref={scrollAreaRef} className="h-[500px] rounded-md p-4 space-y-2 overflow-y-auto">
+            <ScrollArea className="h-[500px] rounded-md pt-2 pb-2 space-y-2">
                 {messages.map((message: Message) => (
-                    <div key={message.id} className="p-2 rounded-md">
-                        <p><strong>{message.username}:</strong> {message.text}</p>
+                    <div key={message.id} className="p-1 rounded-md">
+                        <p><strong style={{ color: message.color }}>{message.username}:</strong> {message.text}</p>
                     </div>
                 ))}
+
+                {/* Empty div to scroll to */}
+                <div ref={lastMessageRef} />
             </ScrollArea>
 
             <Input
@@ -79,6 +84,7 @@ export default function Chatbox() {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={handleKeyPress}
+                className="text-sm"
             />
         </div>
     );
