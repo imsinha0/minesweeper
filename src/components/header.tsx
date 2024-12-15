@@ -2,8 +2,10 @@
 
 import Link from "next/link"
 import { SpeakerLoudIcon, SpeakerOffIcon, SunIcon, MoonIcon } from '@radix-ui/react-icons';
+import { useUser } from "../context/UserContext";
 
 function Header() {
+  const { username } = useUser(); // Extract username from the context
 
 
       return (
@@ -15,7 +17,7 @@ function Header() {
         
         <div className="flex space-x-4 items-center">
         <Link href="/user" className="text-l text-green-600 hover:text-blue-600">
-        Username
+        {username}
         </Link>
         <Link href="/" className="text-4xl font-bold hover:text-blue-600">
           <SpeakerLoudIcon/>

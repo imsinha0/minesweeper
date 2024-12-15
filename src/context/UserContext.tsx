@@ -4,7 +4,7 @@ import { db } from "@/firebaseConfig"; // Import Firestore instance
 import { collection, addDoc, doc, getDoc } from "firebase/firestore";
 
 // Create Context
-const UserContext = createContext<{ username: string | null }>({ username: null });
+const UserContext = createContext<{ username: string}>({ username: "" });
 
 // Helper to generate random username
 const generateRandomUsername = () => {
