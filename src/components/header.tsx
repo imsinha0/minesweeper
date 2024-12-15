@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import ChangeNameDialog from "./changeNameDialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog"
 
 
 function Header() {
@@ -37,14 +38,13 @@ function Header() {
             <SpeakerLoudIcon />
           </Link>
 
-
-          <DropdownMenu>
+      <DropdownMenu >
       <DropdownMenuTrigger className="p-2 rounded-full bg-gray-800 text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
         <GearIcon className="w-5 h-5" />
       </DropdownMenuTrigger>
 
       <DropdownMenuContent className="w-48 p-2 mt-2 rounded-lg shadow-lg bg-white text-gray-800 border border-gray-200">
-        <DropdownMenuItem className="px-4 py-2 text-sm rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-200 transition-colors">
+        <DropdownMenuItem className="px-4 py-2 text-sm rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-200 transition-colors" >
           <ChangeNameDialog />
         </DropdownMenuItem>
         <DropdownMenuItem className="px-4 py-2 text-sm rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-200 transition-colors">
@@ -55,9 +55,6 @@ function Header() {
         </DropdownMenuItem>
         <DropdownMenuItem className="px-4 py-2 text-sm rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-200 transition-colors">
           Account options
-        </DropdownMenuItem>
-        <DropdownMenuItem className="px-4 py-2 text-sm rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-200 transition-colors">
-          Subscription
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
