@@ -2,22 +2,9 @@
 
 import Link from "next/link"
 import { SpeakerLoudIcon, SpeakerOffIcon, SunIcon, MoonIcon } from '@radix-ui/react-icons';
-import { createContext, useContext} from 'react';
-
-const SettingsContext = createContext({
-  volume: "on",
-  setVolume: (volume: "on" | "off") => {},
-});
-
-
 
 function Header() {
 
-  const settings = useContext(SettingsContext);
-
-  function handleChangeVolume() {
-    settings.setVolume((volume) => (volume === "on" ? "off" : "on"));
-  }
 
       return (
 <nav className="p-4">
