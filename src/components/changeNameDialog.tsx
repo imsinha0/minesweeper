@@ -1,112 +1,80 @@
 "use client";
 
-
-
-import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogClose, DialogHeader} from "@radix-ui/react-dialog";
-import { Button } from "@/components/ui/button";
-import { DialogFooter } from "./ui/dialog";
-import { Input } from "./ui/input";
-import { useUser } from "@/context/UserContext";
 import { useState } from "react";
-import { db } from "@/firebaseConfig";
-import { doc, updateDoc } from "firebase/firestore";
-{/*
-export function ChangeNameDialog() {
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button>Open Dialog</Button>
-      </DialogTrigger>
-      <DialogContent aria-modal="true">
-        <p>Test dialog content</p>
-      </DialogContent>
-      <DialogFooter>
-        <Button>Save Changes</Button>
-    </DialogFooter>
-    </Dialog>
-  );
-}
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+import { useUser } from "../context/UserContext";
 
-const  userId  = useUser().userId;
-  const updateUsername = useUser().updateUsername;
-  const [newName, setNewName] = useState("");
+export function ChangeNameDialog({ closeDropdown }: { closeDropdown: () => void }) {
+  const { username, setUsername } = useUser(); // Assuming `setUsername` is part of your context
+  const [newName, setNewName] = useState(username); // Initialize with the current username
+  const [open, setOpen] = useState(false); // State to control the dialog
 
-  const handleNameChange = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newName.trim() && userId) {
-      try {
-        await updateDoc(doc(db, "users", userId), {
-          username: newName.trim(),
-        });
-        updateUsername(newName.trim());
-        setNewName("");
-      } catch (error) {
-        console.error("Error updating name:", error);
-      }
-    }
+  const handleSave = () => {
+    setUsername(newName); // Update the username in context
+    setOpen(false); // Close the dialog
   };
 
-*/}
+  return (
+    <>
+      {/* Trigger Button */}
+      <button
+        className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
+        onClick={(e) => {
+          e.stopPropagation(); // Prevent dropdown close from propagating
+          closeDropdown(); // Explicitly close the dropdown menu
+          setOpen(true); // Open the dialog
+        }}
+      >
+        Change Name
+      </button>
 
-interface ChangeNameDialogProps {
-    open: boolean;
-    onClose: () => void;
-  }
+      {/* Dialog */}
+      <AlertDialog open={open} onOpenChange={setOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Change Your Name</AlertDialogTitle>
+            <AlertDialogDescription>
+              Enter a new username below to update your profile.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
 
-  
-export function ChangeNameDialog({ open, onClose }: ChangeNameDialogProps) {
-    const { userId, updateUsername } = useUser();
-    const [newName, setNewName] = useState("");
-  
-    const handleNameChange = async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (newName.trim() && userId) {
-        try {
-          await updateDoc(doc(db, "users", userId), {
-            username: newName.trim(),
-          });
-          updateUsername(newName.trim());
-          setNewName("");
-          onClose(); // Close dialog after successful update
-        } catch (error) {
-          console.error("Error updating name:", error);
-        }
-      }
-    };
-  
-    return (
-      <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent aria-modal="true">
-          <DialogHeader>
-            <DialogTitle>Change Name</DialogTitle>
-            <DialogClose asChild>
-              <Button
-                variant="outline"
-                onClick={onClose}
-                className="absolute top-4 right-4"
-              >
-                X
-              </Button>
-            </DialogClose>
-          </DialogHeader>
-          <form onSubmit={handleNameChange}>
-            <div className="mb-4">
-              <Input
-                type="text"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                placeholder="Enter new name"
-                aria-label="New name"
-              />
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button type="submit">Save Changes</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-    );
-  }
+          {/* Input Field */}
+          <div className="mt-4">
+            <input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter your new name"
+            />
+          </div>
+
+          {/* Actions */}
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+              onClick={() => setOpen(false)}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleSave}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Save
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
