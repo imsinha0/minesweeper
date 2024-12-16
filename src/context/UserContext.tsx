@@ -10,6 +10,7 @@ interface UserContextType {
   username: string;
   color: string;
   updateUsername: (newUsername: string) => Promise<void>;
+  updateUserColor: (newColor: string) => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType>({
@@ -17,6 +18,7 @@ const UserContext = createContext<UserContextType>({
   username: "",
   color: "",
   updateUsername: async () => {},
+  updateUserColor: async () => {},
 });
 
 // Helper to generate random username
@@ -54,6 +56,19 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUsername(newUsername);
     } catch (error) {
       console.error("Failed to update username:", error);
+    }
+  };
+
+  // Method to update user color in Firestore and local state
+  const updateUserColor = async (newColor: string) => {
+    if (!userId) return;
+
+    try {
+      const userDocRef = doc(db, "users", userId);
+      await updateDoc(userDocRef, { color: newColor });
+      setColor(newColor);
+    } catch (error) {
+      console.error("Failed to update user color:", error);
     }
   };
 
@@ -109,7 +124,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       userId, 
       username, 
       color, 
-      updateUsername 
+      updateUsername,
+      updateUserColor 
     }}>
       {children}
     </UserContext.Provider>

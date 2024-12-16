@@ -9,16 +9,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import ChangeNameDialog from "./changeNameDialog";
 import { useState } from "react";
-import { db } from "@/firebaseConfig"; // Import Firestore instance
-import { doc, updateDoc } from "firebase/firestore";
+import { ChangeNameDialog } from "./ChangeNameDialog";
 
 function Header() {
-  const { userId, username, color} = useUser(); // Extract from context
-  const [changeName, setChangeName] = useState(false);
+  const { username, color } = useUser();
+  const [activeDialog, setActiveDialog] = useState<string | null>(null);
 
-  
+  const handleOpenDialog = (dialogType: string) => setActiveDialog(dialogType);
+  const handleCloseDialog = () => setActiveDialog(null);
 
   return (
     <nav className="p-3 ml-5 pr-8">
@@ -30,8 +29,8 @@ function Header() {
         <div className="flex space-x-4 items-center">
           <Link
             href="/user"
-            style={{ color }} // Apply dynamic color from the context
-            className="text-lg" // Adjust the text size as needed
+            style={{ color }}
+            className="text-lg"
           >
             {username}
           </Link>
@@ -46,31 +45,20 @@ function Header() {
             </DropdownMenuTrigger>
 
             <DropdownMenuContent className="w-48 p-2 mt-2 rounded-lg shadow-lg bg-white text-gray-800 border border-gray-200">
-            <DropdownMenuItem 
-              className="px-4 py-2 text-sm rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-200 transition-colors"
-              onClick={() => setChangeName(true)}
-            >
-              Change Name
-            </DropdownMenuItem>
-              <DropdownMenuItem className="px-4 py-2 text-sm rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-200 transition-colors">
-                Change user color
-              </DropdownMenuItem>
-              <DropdownMenuItem className="px-4 py-2 text-sm rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-200 transition-colors">
-                Change game color
-              </DropdownMenuItem>
-              <DropdownMenuItem className="px-4 py-2 text-sm rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-200 transition-colors">
-                Account options
+              <DropdownMenuItem
+                className="px-4 py-2 text-sm rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-200 transition-colors"
+                onClick={() => handleOpenDialog("name")}
+              >
+                Change Name
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          <ChangeNameDialog
+            open={activeDialog === "name"}
+            onClose={handleCloseDialog}
+          />
         </div>
-
-        {/* Change Name Dialog */}
-        <ChangeNameDialog
-        open={changeName}
-        onClose={() => setChangeName(false)}
-      />
-
       </div>
     </nav>
   );
