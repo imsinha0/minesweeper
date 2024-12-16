@@ -18,19 +18,7 @@ function Header() {
   const { userId, username, color} = useUser(); // Extract from context
   const [changeName, setChangeName] = useState(false);
 
-  async function handleChangeName(newName: string) {
-    const trimmedName = newName.trim();
-    if (trimmedName) {
-      try {
-        // Update the username in Firestore
-        const userDocRef = doc(db, "users", userId);
-        await updateDoc(userDocRef, { username: trimmedName });
-      } catch (error) {
-        console.error("Failed to update username:", error);
-      }
-    }
-    setChangeName(false); // Close the dialog after submission
-  }
+  
 
   return (
     <nav className="p-3 ml-5 pr-8">
@@ -58,14 +46,12 @@ function Header() {
             </DropdownMenuTrigger>
 
             <DropdownMenuContent className="w-48 p-2 mt-2 rounded-lg shadow-lg bg-white text-gray-800 border border-gray-200">
-              <DropdownMenuItem
-                className="px-4 py-2 text-sm rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-200 transition-colors"
-                onClick={() => 
-                  {setChangeName(true);}
-                }
-              >
-                Change Name
-              </DropdownMenuItem>
+            <DropdownMenuItem 
+              className="px-4 py-2 text-sm rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-200 transition-colors"
+              onClick={() => setChangeName(true)}
+            >
+              Change Name
+            </DropdownMenuItem>
               <DropdownMenuItem className="px-4 py-2 text-sm rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-200 transition-colors">
                 Change user color
               </DropdownMenuItem>
@@ -81,10 +67,9 @@ function Header() {
 
         {/* Change Name Dialog */}
         <ChangeNameDialog
-          open={changeName}
-          onClose={() => setChangeName(false)} // Ensure this updates state properly
-          onSubmit={handleChangeName}
-        />
+        open={changeName}
+        onClose={() => setChangeName(false)}
+      />
 
       </div>
     </nav>

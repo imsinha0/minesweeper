@@ -1,15 +1,22 @@
 "use client";
 
-// context/UserContext.tsx
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { db } from "@/firebaseConfig"; // Import Firestore instance
-import { collection, addDoc, doc, getDoc } from "firebase/firestore";
+import { db } from "@/firebaseConfig";
+import { collection, addDoc, doc, getDoc, updateDoc } from "firebase/firestore";
 
-// Define UserContext structure with userId, username, and color
-const UserContext = createContext<{ userId: string; username: string; color: string }>({
+// Expand the context to include update methods
+interface UserContextType {
+  userId: string;
+  username: string;
+  color: string;
+  updateUsername: (newUsername: string) => Promise<void>;
+}
+
+const UserContext = createContext<UserContextType>({
   userId: "",
   username: "",
   color: "",
+  updateUsername: async () => {},
 });
 
 // Helper to generate random username
@@ -25,15 +32,8 @@ const generateRandomUsername = () => {
 // Helper to generate random dark color
 const generateRandomDarkColor = () => {
   const darkColors = [
-    "#2C3E50", // dark blue
-    "#34495E", // dark grayish blue
-    "#1A237E", // dark indigo
-    "#8B0000", // dark red
-    "#4B0082", // indigo
-    "#D32F2F", // dark red
-    "#C2185B", // dark pink
-    "#7B1FA2", // dark purple
-    "#cbec12", // dark green
+    "#2C3E50", "#34495E", "#1A237E", "#8B0000", 
+    "#4B0082", "#D32F2F", "#C2185B", "#7B1FA2", "#cbec12"
   ];
   return darkColors[Math.floor(Math.random() * darkColors.length)];
 };
@@ -44,17 +44,38 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [username, setUsername] = useState<string>("");
   const [color, setColor] = useState<string>("");
 
+  // Method to update username in Firestore and local state
+  const updateUsername = async (newUsername: string) => {
+    if (!userId) return;
+
+    try {
+      const userDocRef = doc(db, "users", userId);
+      await updateDoc(userDocRef, { username: newUsername });
+      setUsername(newUsername);
+    } catch (error) {
+      console.error("Failed to update username:", error);
+    }
+  };
+
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
 
     const getUserFromFirestore = async (userId: string) => {
-      const userDocRef = doc(db, "users", userId);
-      const userDoc = await getDoc(userDocRef);
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        setUserId(userId);
-        setUsername(userData.username);
-        setColor(userData.color);
+      try {
+        const userDocRef = doc(db, "users", userId);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setUserId(userId);
+          setUsername(userData.username);
+          setColor(userData.color);
+        } else {
+          // If stored user doesn't exist, create a new one
+          await createNewUser();
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+        await createNewUser();
       }
     };
 
@@ -84,11 +105,22 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   return (
-    <UserContext.Provider value={{ userId, username, color }}>
+    <UserContext.Provider value={{ 
+      userId, 
+      username, 
+      color, 
+      updateUsername 
+    }}>
       {children}
     </UserContext.Provider>
   );
 };
 
 // Hook to use UserContext
-export const useUser = () => useContext(UserContext);
+export const useUser = () => {
+  const context = useContext(UserContext);
+  if (!context) {
+    throw new Error('useUser must be used within a UserProvider');
+  }
+  return context;
+};
