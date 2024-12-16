@@ -1,22 +1,36 @@
 "use client";
 
 import Link from "next/link";
-import { SpeakerLoudIcon, SpeakerOffIcon, GearIcon } from '@radix-ui/react-icons';
+import { SpeakerLoudIcon, GearIcon } from "@radix-ui/react-icons";
 import { useUser } from "../context/UserContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import ChangeNameDialog from "./changeNameDialog";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog"
-
+import { useState } from "react";
+import { db } from "@/firebaseConfig"; // Import Firestore instance
+import { doc, updateDoc } from "firebase/firestore";
 
 function Header() {
-  const { username, color } = useUser(); // Extract username and color from the context
+  const { userId, username, color} = useUser(); // Extract from context
+  const [changeName, setChangeName] = useState(false);
+
+  async function handleChangeName(newName: string) {
+    const trimmedName = newName.trim();
+    if (trimmedName) {
+      try {
+        // Update the username in Firestore
+        const userDocRef = doc(db, "users", userId);
+        await updateDoc(userDocRef, { username: trimmedName });
+      } catch (error) {
+        console.error("Failed to update username:", error);
+      }
+    }
+    setChangeName(false); // Close the dialog after submission
+  }
 
   return (
     <nav className="p-3 ml-5 pr-8">
@@ -26,8 +40,8 @@ function Header() {
         </Link>
 
         <div className="flex space-x-4 items-center">
-          <Link 
-            href="/user" 
+          <Link
+            href="/user"
             style={{ color }} // Apply dynamic color from the context
             className="text-lg" // Adjust the text size as needed
           >
@@ -38,29 +52,40 @@ function Header() {
             <SpeakerLoudIcon />
           </Link>
 
-      <DropdownMenu >
-      <DropdownMenuTrigger className="p-2 rounded-full bg-gray-800 text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-        <GearIcon className="w-5 h-5" />
-      </DropdownMenuTrigger>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="p-2 rounded-full bg-gray-800 text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+              <GearIcon className="w-5 h-5" />
+            </DropdownMenuTrigger>
 
-      <DropdownMenuContent className="w-48 p-2 mt-2 rounded-lg shadow-lg bg-white text-gray-800 border border-gray-200">
-        <DropdownMenuItem className="px-4 py-2 text-sm rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-200 transition-colors" >
-          <ChangeNameDialog />
-        </DropdownMenuItem>
-        <DropdownMenuItem className="px-4 py-2 text-sm rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-200 transition-colors">
-          Change user color
-        </DropdownMenuItem>
-        <DropdownMenuItem className="px-4 py-2 text-sm rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-200 transition-colors">
-          Change game color
-        </DropdownMenuItem>
-        <DropdownMenuItem className="px-4 py-2 text-sm rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-200 transition-colors">
-          Account options
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-
-
+            <DropdownMenuContent className="w-48 p-2 mt-2 rounded-lg shadow-lg bg-white text-gray-800 border border-gray-200">
+              <DropdownMenuItem
+                className="px-4 py-2 text-sm rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-200 transition-colors"
+                onClick={() => 
+                  {setChangeName(true);}
+                }
+              >
+                Change Name
+              </DropdownMenuItem>
+              <DropdownMenuItem className="px-4 py-2 text-sm rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-200 transition-colors">
+                Change user color
+              </DropdownMenuItem>
+              <DropdownMenuItem className="px-4 py-2 text-sm rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-200 transition-colors">
+                Change game color
+              </DropdownMenuItem>
+              <DropdownMenuItem className="px-4 py-2 text-sm rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-200 transition-colors">
+                Account options
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
+
+        {/* Change Name Dialog */}
+        <ChangeNameDialog
+          open={changeName}
+          onClose={() => setChangeName(false)} // Ensure this updates state properly
+          onSubmit={handleChangeName}
+        />
+
       </div>
     </nav>
   );

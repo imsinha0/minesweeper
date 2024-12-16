@@ -1,12 +1,16 @@
-"use client"
+"use client";
 
 // context/UserContext.tsx
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { db } from "@/firebaseConfig"; // Import Firestore instance
 import { collection, addDoc, doc, getDoc } from "firebase/firestore";
 
-// Create Context with username and color
-const UserContext = createContext<{ username: string; color: string }>({ username: "", color: "" });
+// Define UserContext structure with userId, username, and color
+const UserContext = createContext<{ userId: string; username: string; color: string }>({
+  userId: "",
+  username: "",
+  color: "",
+});
 
 // Helper to generate random username
 const generateRandomUsername = () => {
@@ -29,13 +33,14 @@ const generateRandomDarkColor = () => {
     "#D32F2F", // dark red
     "#C2185B", // dark pink
     "#7B1FA2", // dark purple
-    "#cbec12" // dark green
+    "#cbec12", // dark green
   ];
   return darkColors[Math.floor(Math.random() * darkColors.length)];
 };
 
 // Provider Component
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [userId, setUserId] = useState<string>("");
   const [username, setUsername] = useState<string>("");
   const [color, setColor] = useState<string>("");
 
@@ -47,6 +52,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const userDoc = await getDoc(userDocRef);
       if (userDoc.exists()) {
         const userData = userDoc.data();
+        setUserId(userId);
         setUsername(userData.username);
         setColor(userData.color);
       }
@@ -59,12 +65,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const docRef = await addDoc(usersCollectionRef, {
         username: newUsername,
-        color: newColor, // Store the color
+        color: newColor,
         createdAt: new Date(),
       });
 
-      const userId = docRef.id;
-      localStorage.setItem("userId", userId);
+      const newUserId = docRef.id;
+      localStorage.setItem("userId", newUserId);
+      setUserId(newUserId);
       setUsername(newUsername);
       setColor(newColor);
     };
@@ -77,7 +84,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   return (
-    <UserContext.Provider value={{ username, color }}>
+    <UserContext.Provider value={{ userId, username, color }}>
       {children}
     </UserContext.Provider>
   );
