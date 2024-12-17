@@ -17,7 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
+      <body className="w-full overflow-x-hidden">
         <UserProvider>
           <Header/>
             {children}

@@ -12,6 +12,25 @@ body {
   }
 }
 
+body {
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+#__next, .next-container {
+  overflow-x: hidden;
+  width: 100vw;
+}
+
+.fixed.inset-0 {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
 @layer base {
   :root {
     //--background: 0 0% 100%;

@@ -65,10 +65,10 @@ export default function Chatbox() {
     }, [messages]); // Dependency on messages to trigger scrolling
 
     return (
-        <div className="bg-white shadow-lg rounded-lg p-4 text-sm">
+        <div className="bg-white shadow-lg rounded-lg p-2 text-sm">
             <p className="text-center text-sm">Lobby Chat</p>
 
-            <ScrollArea className="h-[500px] rounded-md pt-2 pb-2 space-y-2">
+            <ScrollArea className="h-[70vh]">
                 {messages.map((message: Message) => (
                     <div key={message.id} className="p-1 rounded-md">
                         <p><strong style={{ color: message.color }}>{message.username}:</strong> {message.text}</p>
@@ -84,7 +84,7 @@ export default function Chatbox() {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={handleKeyPress}
-                className="text-sm"
+                className="text-sm mt-2"
             />
         </div>
     );
