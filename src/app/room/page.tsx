@@ -8,6 +8,7 @@ import Chatbox from "@/components/chatbox";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/context/UserContext";
 import {Input} from "@/components/ui/input";
+import {createMinesweeperBoard} from "@/utils/minesweeper";
 
 export default function Room() {
   const searchParams = useSearchParams();
@@ -38,8 +39,11 @@ export default function Room() {
 
           if (data.gameMode) setGameSettings(data.gameMode);
           if (data.hostId) setHostID(data.hostId);
+
+          if (data.status === "started") {
+            router.push(`/game?id=${roomId}`);
+          }
         }
-        if (data?.status === "started") setGameStarted(true);
       });
 
       // Add the current user to the room when the component mounts
@@ -72,25 +76,6 @@ export default function Room() {
 
       addCurrentUserToRoom();
 
-      // Clean-up function to remove user from the room when they leave
-      const removeUserFromRoom = async () => {
-        const roomRef = doc(db, "games", roomId);
-        const roomDoc = await getDoc(roomRef);
-        if (roomDoc.exists()) {
-          const roomData = roomDoc.data();
-          const playersList = roomData?.players || [];
-
-          // Remove the current user from the players list
-          const updatedPlayersList = playersList.filter(
-            (player: { userID: string }) => player.userID !== userId
-          );
-
-          await updateDoc(roomRef, {
-            players: updatedPlayersList,
-          });
-        }
-      };
-
       // Cleanup when the user leaves or the component unmounts
       return () => {
         removeUserFromRoom();
@@ -102,45 +87,56 @@ export default function Room() {
   // start the game
 
   const startGame = async () => {
+    const numRows = Number(gameSettings[0]);
+    const numCols = Number(gameSettings[2]);
+    const numMines = Math.floor(2*Math.sqrt(numRows*numCols));
+
     if (roomId) {
       await updateDoc(doc(db, "games", roomId), {
         status: "started",
-        gameMode: gameSettings,
+        gameBoard: JSON.stringify(createMinesweeperBoard(numRows, numCols, numMines)),
       });
     }
     router.push(`/game?id=${roomId}`);
-
   };
 
-{/*
-  const startGame = async () => {
-    if (roomId) {
-      await updateDoc(doc(db, "games", roomId), {
-        status: "started",
-        gameMode: gameSettings,
-      });
-      setGameStarted(true);
-    }
-  };
-*/}
 
 
 
   const handleClick = () => {
     navigator.clipboard.writeText(roomUrl).then(() => {
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000); // Reset the text after 2 seconds
+      setTimeout(() => setCopied(false), 1000);
     });
   };
 
   // Check if the current user is the host
   const isHost = (hostID === userId);
 
+  const removeUserFromRoom = async () => {
+    if (roomId && userId) {
+      const roomRef = doc(db, "games", roomId);
+      const roomDoc = await getDoc(roomRef);
+      if (roomDoc.exists()) {
+        const roomData = roomDoc.data();
+        const playersList = roomData?.players || [];
+
+        // Remove the current user from the players list
+        const updatedPlayersList = playersList.filter(
+          (player: { userID: string }) => player.userID !== userId
+        );
+
+        await updateDoc(roomRef, {
+          players: updatedPlayersList,
+        });
+      }
+    }
+  };
+
   return (
     <div className="flex px-40">
       <div className="flex h-[40vh] w-full">
         <div className="w-1/4 p-4">
-          <h2 className="text-lg font-semibold mb-2">Game Chat</h2>
           <Chatbox />
         </div>
 
@@ -243,6 +239,7 @@ export default function Room() {
           <div>
             <Button
               onClick={() => {
+                removeUserFromRoom();
                 window.location.href = "/";
               }}
               className="w-full py-3 text-lg font-semibold text-white rounded"
