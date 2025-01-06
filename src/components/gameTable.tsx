@@ -15,6 +15,36 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+
+// function to convert timestamp to how long ago
+
+function timeSince(date: Date) {
+  const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+  let interval = seconds / 31536000;
+
+  if (interval > 1) {
+    return Math.floor(interval) + " years ago";
+  }
+  interval = seconds / 2592000;
+  if (interval > 1) {
+    return Math.floor(interval) + " months ago";
+  }
+  interval = seconds / 86400;
+  if (interval > 1) {
+    return Math.floor(interval) + " days ago";
+  }
+  interval = seconds / 3600;
+  if (interval > 1) {
+    return Math.floor(interval) + " hours ago";
+  }
+  interval = seconds / 60;
+  if (interval > 1) {
+    return Math.floor(interval) + " minutes ago";
+  }
+  return Math.floor(seconds) + " seconds ago";
+}
+
+
 export default function GameTable() {
   const [games, setGames] = useState<any[]>([]); // State to hold games
   const router = useRouter(); // To handle navigation
@@ -31,9 +61,10 @@ export default function GameTable() {
           gamesData.push({
             id: gameId,
             host: gameData.hostName, // Directly using the host field
+            color: gameData.hostColor,
             players: gameData.players ? gameData.players.length : 0, // if no players, it will be undefined
             status: gameData.status,
-            created: gameData.createdAt?.toDate().toLocaleString(), // Format the timestamp
+            created: timeSince(gameData.createdAt?.toDate()), // Format the timestamp
           });
         }
       });
@@ -61,7 +92,7 @@ export default function GameTable() {
       <TableBody>
         {games.map((game) => (
           <TableRow key={game.id} className="cursor-pointer" onClick={() => joinGame(game.id)}>
-            <TableCell>{game.host}</TableCell>
+            <TableCell style={{color: game.color}}>{game.host}</TableCell>
             <TableCell>{game.players}</TableCell>
             <TableCell>{game.status}</TableCell>
             <TableCell className="text-right">{game.created}</TableCell>

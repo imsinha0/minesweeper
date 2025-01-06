@@ -7,10 +7,13 @@ import {db} from "@/firebaseConfig";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation"; // Import from next/navigation
 import { useUser } from "@/context/UserContext";
+import React from "react";
 
 export default function Home() {
   const router = useRouter();
   const { userId, username } = useUser();
+  const color = useUser().color;
+  
 
   const createGame = async () => {
     try {
@@ -19,6 +22,7 @@ export default function Home() {
         createdAt: Timestamp.now(),
         status: "waiting", // Initial status for a new game
         hostId: userId, // Set the host to the current user
+        hostColor: color,
         hostName: username, // Set the host name to the current user's name
       });
 

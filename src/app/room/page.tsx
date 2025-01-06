@@ -7,19 +7,20 @@ import { db } from "@/firebaseConfig";
 import Chatbox from "@/components/chatbox";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/context/UserContext";
+import {Input} from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 export default function Room() {
   const searchParams = useSearchParams();
   const roomId = searchParams.get("id");
   const [players, setPlayers] = useState<{ userID: string; username: string; playerColor: string }[]>([]);
   const [gameSettings, setGameSettings] = useState<string>("7x7");
-  const [enableHints, setEnableHints] = useState(false);
   const [roomUrl, setRoomUrl] = useState("");
   const [gameStarted, setGameStarted] = useState(false);
   const [hostID, setHostID] = useState<string | null>(null);
 
   const { userId, username, color } = useUser();
-  const currentUser = { userID: userId, username: username };
 
   useEffect(() => {
     if (roomId) {
@@ -35,7 +36,7 @@ export default function Room() {
           setPlayers(validPlayers);
 
           if (data.gameMode) setGameSettings(data.gameMode);
-          if (data.hostID) setHostID(data.hostID); // Set the hostID from the database
+          if (data.hostId) setHostID(data.hostId);
         }
         if (data?.status === "started") setGameStarted(true);
       });
@@ -50,13 +51,13 @@ export default function Room() {
             const playersList = roomData?.players || [];
 
             const userAlreadyInRoom = playersList.some(
-              (player: { userID: string }) => player.userID === currentUser.userID
+              (player: { userID: string }) => player.userID === userId
             );
 
             if (!userAlreadyInRoom) {
               playersList.push({
-                userID: currentUser.userID,
-                username: currentUser.username,
+                userID: userId,
+                username: username,
                 playerColor: color || "#000000", // Use the color from context
               });
 
@@ -80,7 +81,7 @@ export default function Room() {
 
           // Remove the current user from the players list
           const updatedPlayersList = playersList.filter(
-            (player: { userID: string }) => player.userID !== currentUser.userID
+            (player: { userID: string }) => player.userID !== userId
           );
 
           await updateDoc(roomRef, {
@@ -102,14 +103,13 @@ export default function Room() {
       await updateDoc(doc(db, "games", roomId), {
         status: "started",
         gameMode: gameSettings,
-        hintsEnabled: enableHints,
       });
       setGameStarted(true);
     }
   };
 
   // Check if the current user is the host
-  const isHost = hostID === currentUser.userID;
+  const isHost = (hostID === userId);
 
   return (
     <div className="flex px-40">
@@ -132,7 +132,21 @@ export default function Room() {
                       <span className="font-semibold" style={{ color: player.playerColor }}>
                         {player.username}
                       </span>
-                      <span className="text-gray-500">({player.userID})</span>
+                      {hostID === player.userID && <span className="text-xs text-gray-500">Host</span>}
+                      {isHost && (
+                        <span
+                          className="text-xs text-gray-500 cursor-pointer"
+                          onClick={() => {
+                            const updatedPlayers = players.filter(
+                              (p) => p.userID !== player.userID
+                            );
+                            setPlayers(updatedPlayers);
+                            updateDoc(doc(db, "games", roomId), { players: updatedPlayers });
+                          }}
+                        >
+                          Remove
+                        </span>
+                      )}
                     </div>
                   ))
                 )}
@@ -142,6 +156,31 @@ export default function Room() {
             <div className="w-1/2 pl-4">
               <h3 className="font-semibold text-gray-700 mb-2">Game Settings</h3>
               <div className="flex flex-col space-y-2">
+
+                <RadioGroup
+                  defaultValue={gameSettings}
+                  disabled={!isHost}
+                >
+                    
+                  <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="5x5" id="5x5" />
+                  <Label htmlFor = "5x5">5x5</Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="7x7" id="7x7" />
+                  <Label htmlFor = "7x7">7x7</Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="9x9" id="9x9" />
+                  <Label htmlFor = "9x9">9x9</Label>
+                  </div>
+
+                </RadioGroup>
+
+                
+                {/*
                 {["5x5", "7x7", "9x9"].map((mode) => (
                   <label key={mode} className="flex items-center space-x-2 cursor-pointer">
                     <input
@@ -161,6 +200,9 @@ export default function Room() {
                     <span className="text-gray-700">{mode}</span>
                   </label>
                 ))}
+                */}
+
+
               </div>
             </div>
           </div>
@@ -168,14 +210,14 @@ export default function Room() {
           <div className="mb-6">
             <h3 className="font-semibold text-gray-700 mb-2">Inviting Friends</h3>
             <div className="flex items-center space-x-2">
-              <input
+              <Input
                 readOnly
                 value={roomUrl}
                 className="border p-2 rounded w-full text-sm text-pink-500"
               />
               <Button
                 onClick={() => navigator.clipboard.writeText(roomUrl)}
-                className="bg-blue-500 text-white px-3 py-2 rounded"
+                className="px-3 py-2 rounded"
               >
                 Copy Link
               </Button>
@@ -188,8 +230,8 @@ export default function Room() {
               disabled={gameStarted || !isHost}
               className={`w-full py-3 text-lg font-semibold text-white rounded ${
                 gameStarted || !isHost
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-500"
+                  ? "cursor-not-allowed"
+                  : ""
               }`}
             >
               {gameStarted ? "Game Started" : "START GAME"}
