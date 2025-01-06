@@ -1,15 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { doc, onSnapshot, updateDoc, getDoc } from "firebase/firestore";
 import { db } from "@/firebaseConfig";
 import Chatbox from "@/components/chatbox";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/context/UserContext";
 import {Input} from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 
 export default function Room() {
   const searchParams = useSearchParams();
@@ -17,8 +15,11 @@ export default function Room() {
   const [players, setPlayers] = useState<{ userID: string; username: string; playerColor: string }[]>([]);
   const [gameSettings, setGameSettings] = useState<string>("7x7");
   const [roomUrl, setRoomUrl] = useState("");
-  const [gameStarted, setGameStarted] = useState(false);
   const [hostID, setHostID] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const router = useRouter();
+  
+
 
   const { userId, username, color } = useUser();
 
@@ -98,6 +99,20 @@ export default function Room() {
     }
   }, [roomId, userId, username, color]);
 
+  // start the game
+
+  const startGame = async () => {
+    if (roomId) {
+      await updateDoc(doc(db, "games", roomId), {
+        status: "started",
+        gameMode: gameSettings,
+      });
+    }
+    router.push(`/game?id=${roomId}`);
+
+  };
+
+{/*
   const startGame = async () => {
     if (roomId) {
       await updateDoc(doc(db, "games", roomId), {
@@ -106,6 +121,16 @@ export default function Room() {
       });
       setGameStarted(true);
     }
+  };
+*/}
+
+
+
+  const handleClick = () => {
+    navigator.clipboard.writeText(roomUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000); // Reset the text after 2 seconds
+    });
   };
 
   // Check if the current user is the host
@@ -157,50 +182,26 @@ export default function Room() {
               <h3 className="font-semibold text-gray-700 mb-2">Game Settings</h3>
               <div className="flex flex-col space-y-2">
 
-                <RadioGroup
-                  defaultValue={gameSettings}
-                  disabled={!isHost}
-                >
-                    
-                  <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="5x5" id="5x5" />
-                  <Label htmlFor = "5x5">5x5</Label>
-                  </div>
+              {["5x5", "7x7", "9x9"].map((mode) => (
+                <label key={mode} className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="gameMode"
+                    value={mode}
+                    checked={gameSettings === mode}
+                    onChange={() => {
+                      if (isHost) {
+                        setGameSettings(mode);
+                        updateDoc(doc(db, "games", roomId), { gameMode: mode });
+                      }
+                    }}
+                    disabled={!isHost}
+                    className={`accent-black ${!isHost ? "cursor-not-allowed" : ""}`}
+                  />
+                  <span className="text-gray-700">{mode}</span>
+                </label>
+              ))}
 
-                  <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="7x7" id="7x7" />
-                  <Label htmlFor = "7x7">7x7</Label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="9x9" id="9x9" />
-                  <Label htmlFor = "9x9">9x9</Label>
-                  </div>
-
-                </RadioGroup>
-
-                
-                {/*
-                {["5x5", "7x7", "9x9"].map((mode) => (
-                  <label key={mode} className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="gameMode"
-                      value={mode}
-                      checked={gameSettings === mode}
-                      onChange={() => {
-                        if (isHost) {
-                          setGameSettings(mode);
-                          updateDoc(doc(db, "games", roomId), { gameMode: mode });
-                        }
-                      }}
-                      disabled={!isHost}
-                      className={`accent-blue-500 ${!isHost ? "cursor-not-allowed" : ""}`}
-                    />
-                    <span className="text-gray-700">{mode}</span>
-                  </label>
-                ))}
-                */}
 
 
               </div>
@@ -213,30 +214,44 @@ export default function Room() {
               <Input
                 readOnly
                 value={roomUrl}
-                className="border p-2 rounded w-full text-sm text-pink-500"
+                className="border p-2 rounded w-full text-sm text-gray-500"
               />
-              <Button
-                onClick={() => navigator.clipboard.writeText(roomUrl)}
-                className="px-3 py-2 rounded"
-              >
-                Copy Link
-              </Button>
+                  <Button onClick={handleClick} className="px-3 py-2 rounded w-32">
+                    {copied ? "Copied" : "Copy Link"}
+                  </Button>
             </div>
           </div>
-
+          
+          {isHost && 
           <div>
             <Button
               onClick={startGame}
-              disabled={gameStarted || !isHost}
+              disabled={!isHost}
               className={`w-full py-3 text-lg font-semibold text-white rounded ${
-                gameStarted || !isHost
+                !isHost
                   ? "cursor-not-allowed"
                   : ""
               }`}
             >
-              {gameStarted ? "Game Started" : "START GAME"}
+              {"START GAME"}
             </Button>
           </div>
+          }
+          {!isHost &&
+          
+          //create a button to leave the room
+          <div>
+            <Button
+              onClick={() => {
+                window.location.href = "/";
+              }}
+              className="w-full py-3 text-lg font-semibold text-white rounded"
+            >
+              Leave Room
+            </Button>
+          </div>
+          }
+
         </div>
       </div>
     </div>
