@@ -98,6 +98,30 @@ export default function Room() {
       });
     }
     router.push(`/game?id=${roomId}`);
+
+    // add players back to the room
+    const roomRef = doc(db, "games", roomId);
+    const roomDoc = await getDoc(roomRef);
+    if (roomDoc.exists()) {
+      const roomData = roomDoc.data();
+      const playersList = roomData?.players || [];
+
+      const userAlreadyInRoom = playersList.some(
+        (player: { userID: string }) => player.userID === userId
+      );
+
+      if (!userAlreadyInRoom) {
+        playersList.push({
+          userID: userId,
+          username: username,
+          playerColor: color || "#000000", // Use the color from context
+        });
+
+        await updateDoc(roomRef, {
+          players: playersList,
+        });
+      }
+    }
   };
 
 

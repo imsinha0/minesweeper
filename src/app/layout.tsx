@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Header from "../components/header";
 import {UserProvider} from "../context/UserContext";
+import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
   title: "Minesweeper",
@@ -22,6 +23,7 @@ export default function RootLayout({
           <Header/>
             {children}
         </UserProvider> 
+        <Toaster />
       </body>
     </html>
   );

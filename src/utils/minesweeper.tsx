@@ -22,12 +22,7 @@ export function createMinesweeperBoard(rows: number, cols: number, mines: number
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
         if (board[row][col] === 'X') {
-          
-            // send message to the user that the game is over
-            // set view back to null
-
-
-
+          continue; // Skip if the current square is a mine
         }
   
         let mineCount = 0;
@@ -66,16 +61,17 @@ export class Board {
     }
   
     reveal(row: number, col: number) {
+      console.log("Revealing", row, col);
       if (this.boardView[row][col] !== null) {
         return;
       }
   
       if (this.boardConfig[row][col] === 'X') {
         this.boardView[row][col] = 'X';
-        this.resetBoard();
         return 'X';
       } else {
         this.boardView[row][col] = this.boardConfig[row][col];
+        console.log("this.boardView[row][col]: ", this.boardView[row][col]);
       }
   
       // If the revealed square is empty (i.e., no neighboring mines), reveal adjacent squares
@@ -110,11 +106,26 @@ export class Board {
       });
     }
 
+    progress(){
+      // count number of nonnull entries of boardView
+      let count = 0;
+      for (let i = 0; i < this.boardView.length; i++) {
+        for (let j = 0; j < this.boardView[i].length; j++) {
+          if (this.boardView[i][j] !== null) {
+            count++;
+          }
+        }
+      }
+      return count;
+    }
+
     resetBoard() {
         // Reset the boardView to all nulls
         this.boardView = Array(this.boardConfig.length)
           .fill(null)
           .map(() => Array(this.boardConfig[0].length).fill(null));
+        
+        console.log("Board reset successfully.");
       }
 
   }
