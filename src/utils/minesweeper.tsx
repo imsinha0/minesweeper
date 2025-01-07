@@ -48,8 +48,7 @@ export function createMinesweeperBoard(rows: number, cols: number, mines: number
     return board;
   }
 
-
-export class Board {
+  export class Board {
     boardConfig: string[][];
     boardView: string[][];
   
@@ -61,72 +60,59 @@ export class Board {
     }
   
     reveal(row: number, col: number) {
-      console.log("Revealing", row, col);
+      // Return early if the cell is already revealed
       if (this.boardView[row][col] !== null) {
-        return;
+        return "done";
       }
   
       if (this.boardConfig[row][col] === 'X') {
         this.boardView[row][col] = 'X';
         return 'X';
       } else {
-        this.boardView[row][col] = this.boardConfig[row][col];
-        console.log("this.boardView[row][col]: ", this.boardView[row][col]);
+        // Convert the value to string to maintain consistent types
+        this.boardView[row][col] = String(this.boardConfig[row][col]);
       }
   
       // If the revealed square is empty (i.e., no neighboring mines), reveal adjacent squares
-      if (Number(this.boardConfig[row][col]) === 0) {
-        // Check all 8 directions for neighboring squares to reveal
+      if (this.boardConfig[row][col] === '0' || Number(this.boardConfig[row][col]) === 0) {
         const directions = [
-          [-1, -1], [-1, 0], [-1, 1], // Top-left, Top, Top-right
-          [0, -1], [0, 1],            // Left, Right
-          [1, -1], [1, 0], [1, 1],    // Bottom-left, Bottom, Bottom-right
+          [-1, -1], [-1, 0], [-1, 1],
+          [0, -1], [0, 1],
+          [1, -1], [1, 0], [1, 1],
         ];
+        
         for (const [dx, dy] of directions) {
           const newRow = row + dx;
           const newCol = col + dy;
-          if (newRow >= 0 && newRow < this.boardConfig.length && newCol >= 0 && newCol < this.boardConfig[0].length) {
-            if (this.boardView[newRow][newCol] === null) { // Only reveal if not already revealed
-              this.reveal(newRow, newCol); // Recursive call for adjacent squares
-            }
+          
+          if (
+            newRow >= 0 && 
+            newRow < this.boardConfig.length && 
+            newCol >= 0 && 
+            newCol < this.boardConfig[0].length && 
+            this.boardView[newRow][newCol] === null
+          ) {
+            this.reveal(newRow, newCol);
           }
         }
       }
+      
+      return this.boardView[row][col];
     }
   
     currentView() {
-      // Show the boardView, where null cells are replaced with empty strings
-      return this.boardView.map((row, rowIndex) => {
-        return row.map((col, colIndex) => {
-          if (col === null) {
-            return ""; // Empty string for unrevealed cells
-          }
-          return col; // Reveal the value (number of mines or 'X' for mines)
-        });
-      });
+      return this.boardView.map(row => 
+        row.map(cell => cell === null ? "" : String(cell))
+      );
     }
 
-    progress(){
-      // count number of nonnull entries of boardView
-      let count = 0;
-      for (let i = 0; i < this.boardView.length; i++) {
-        for (let j = 0; j < this.boardView[i].length; j++) {
-          if (this.boardView[i][j] !== null) {
-            count++;
-          }
-        }
-      }
-      return count;
+    progress() {
+      return this.boardView.flat().filter(cell => cell !== null).length;
     }
 
     resetBoard() {
-        // Reset the boardView to all nulls
-        this.boardView = Array(this.boardConfig.length)
-          .fill(null)
-          .map(() => Array(this.boardConfig[0].length).fill(null));
-        
-        console.log("Board reset successfully.");
-      }
-
-  }
-  
+      this.boardView = Array(this.boardConfig.length)
+        .fill(null)
+        .map(() => Array(this.boardConfig[0].length).fill(null));
+    }
+}

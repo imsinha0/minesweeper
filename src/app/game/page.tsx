@@ -43,22 +43,17 @@ export default function Game() {
           console.error("Error parsing game board:", error);
         }
       }
-    });
-
-    const unsubscribePlayers = onSnapshot(roomRef, (docSnap) => {
-      const data = docSnap.data();
       if (data?.players) {
-        setPlayersProgress(data.players);
+        //setPlayersProgress(data.players);
       }
     });
 
     return () => {
       unsubscribeBoard();
-      unsubscribePlayers();
     };
   }, [roomId]);
 
-  const forceRerender = () => setRerender((prev) => prev + 1);
+  const forceRerender = () => {setRerender((prev) => prev + 1); console.log("Rerendered");};
 
   const boardsize = board ? board.boardConfig.length : 0;
 
@@ -67,6 +62,8 @@ export default function Game() {
 
     const revealedSquares = board.progress();
     const roomRef = doc(db, "games", roomId);
+
+    console.log("revealedSquares: ", revealedSquares);
 
     try {
       const roomSnap = await getDoc(roomRef);
@@ -84,39 +81,39 @@ export default function Game() {
         }
         return player;
       });
-
+         
       await updateDoc(roomRef, { players: updatedPlayers });
       console.log("Player progress updated successfully.");
+
     } catch (error) {
       console.error("Error updating player progress:", error);
     }
   };
 
 
-    const handleSquareClick = async (row: number, col: number) => {
-      if (!board) return;
-    
-      const result = board.reveal(row, col);
-      forceRerender();
-    
-      if (result === "X") {
-        toast({
-          title: "Hit a mine! Resetting the board...",
-        });
-    
-        // Temporarily disable updates while showing the mine
-        setTimeout(() => {
-          board.resetBoard();
-          forceRerender();
-          updateProgress(); // Update progress only after resetting
-          console.log("Board reset successfully.");
-        }, 2000);
+  const handleSquareClick = async (row: number, col: number) => {
+    if (!board) return;
 
-        //BUG: for some reason, after clicking mine and it goes away, clicking a number will disappear
+  
+    const result = board.reveal(row, col);
+    forceRerender();
 
-      } else {
-        updateProgress(); // Update progress for non-mine clicks immediately
-      }
+    if(result === "done") {console.log("already done");return;}
+    
+    if (result === 'X') {
+      toast({
+        title: "Hit a mine! Resetting the board...",
+      });
+  
+      setTimeout(() => {
+        board.resetBoard();
+        forceRerender();
+        updateProgress();
+      }, 2000);
+    } else {
+      updateProgress();
+    }
+    console.log("revealedSquares: ", board.progress());
   };
 
   const renderBoard = () => {
