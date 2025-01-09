@@ -61,6 +61,8 @@ export function createMinesweeperBoard(rows: number, cols: number, mines: number
   
     reveal(row: number, col: number) {
       // Return early if the cell is already revealed
+      console.log("Revealing cell: ", row, col);
+
       if (this.boardView[row][col] !== null) {
         return "done";
       }
@@ -71,6 +73,7 @@ export function createMinesweeperBoard(rows: number, cols: number, mines: number
       } else {
         // Convert the value to string to maintain consistent types
         this.boardView[row][col] = String(this.boardConfig[row][col]);
+        console.log("setting value: ", this.boardConfig[row][col]);
       }
   
       // If the revealed square is empty (i.e., no neighboring mines), reveal adjacent squares
@@ -114,5 +117,6 @@ export function createMinesweeperBoard(rows: number, cols: number, mines: number
       this.boardView = Array(this.boardConfig.length)
         .fill(null)
         .map(() => Array(this.boardConfig[0].length).fill(null));
+      console.log("Board reset.");
     }
 }

@@ -26,30 +26,52 @@ export default function Game() {
   const { userId } = useUser();
   const { toast } = useToast();
 
-  // Fetch game board and player progress data from Firestore
   useEffect(() => {
     if (!roomId) return;
-
-    const roomRef = doc(db, "games", roomId);
-
-    const unsubscribeBoard = onSnapshot(roomRef, (docSnap) => {
-      const data = docSnap.data();
-      if (data?.gameBoard) {
-        try {
-          const parsedBoard = JSON.parse(data.gameBoard);
-          const newBoard = new Board(parsedBoard);
-          setBoard(newBoard);
-        } catch (error) {
-          console.error("Error parsing game board:", error);
+  
+    const loadGameBoard = async () => {
+      const roomRef = doc(db, "games", roomId);
+  
+      try {
+        const roomSnap = await getDoc(roomRef);
+        if (!roomSnap.exists()) {
+          console.error("Game document not found!");
+          return;
         }
+  
+        const data = roomSnap.data();
+        if (data?.gameBoard) {
+          try {
+            const parsedBoard = JSON.parse(data.gameBoard);
+            const newBoard = new Board(parsedBoard);
+            setBoard(newBoard);
+          } catch (error) {
+            console.error("Error parsing game board:", error);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading game board:", error);
       }
+    };
+  
+    loadGameBoard();
+  }, [roomId]);
+  
+  useEffect(() => {
+    if (!roomId) return;
+  
+    const roomRef = doc(db, "games", roomId);
+  
+    // Real-time listener for player progress
+    const unsubscribe = onSnapshot(roomRef, (docSnap) => {
+      const data = docSnap.data();
       if (data?.players) {
-        //setPlayersProgress(data.players);
+        setPlayersProgress(data.players);
       }
     });
-
+  
     return () => {
-      unsubscribeBoard();
+      unsubscribe();
     };
   }, [roomId]);
 
@@ -81,24 +103,23 @@ export default function Game() {
         }
         return player;
       });
-         
-      await updateDoc(roomRef, { players: updatedPlayers });
+     
+      updateDoc(roomRef, { players: updatedPlayers });
       console.log("Player progress updated successfully.");
-
+    
     } catch (error) {
       console.error("Error updating player progress:", error);
     }
+
   };
 
 
   const handleSquareClick = async (row: number, col: number) => {
-    if (!board) return;
-
   
-    const result = board.reveal(row, col);
+    const result = board?.reveal(row, col);
     forceRerender();
 
-    if(result === "done") {console.log("already done");return;}
+    if(result === "done") {return;}
     
     if (result === 'X') {
       toast({
@@ -106,14 +127,13 @@ export default function Game() {
       });
   
       setTimeout(() => {
-        board.resetBoard();
+        board?.resetBoard();
         forceRerender();
         updateProgress();
       }, 2000);
     } else {
       updateProgress();
     }
-    console.log("revealedSquares: ", board.progress());
   };
 
   const renderBoard = () => {
