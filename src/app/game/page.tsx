@@ -12,6 +12,7 @@ import { useUser } from "@/context/UserContext";
 
 interface PlayerProgress {
   username: string;
+  playerColor: string;
   revealedSquares: number;
 }
 
@@ -111,6 +112,18 @@ export default function Game() {
       console.error("Error updating player progress:", error);
     }
 
+    if(revealedSquares === board.nonmineCount()) {
+      // Set game status to completed, set game winner, popover to show winner to all players
+      const roomRef = doc(db, "games", roomId);
+
+      // Update the Firestore database with game completion and winner details
+      await updateDoc(roomRef, {
+        status: "completed",
+        winner: userId, // Assuming the current user who made the winning move is the winner
+      });
+      
+    }
+
   };
 
 
@@ -186,8 +199,12 @@ export default function Game() {
             ) : (
               playersProgress.map((player, index) => (
                 <div key={index} className="mb-4 p-2 border rounded">
-                  <h3 className="text-lg">{player.username}</h3>
+                  <h3 className="text-lg" style={{ color: player.playerColor }}>{player.username}</h3>
                   <p>Revealed Squares: {player.revealedSquares}</p>
+                  <Progress
+                    value={player.revealedSquares}
+                    max={board?.nonmineCount()}
+                  />
                 </div>
               ))
             )}

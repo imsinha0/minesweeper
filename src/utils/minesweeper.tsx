@@ -109,6 +109,10 @@ export function createMinesweeperBoard(rows: number, cols: number, mines: number
       );
     }
 
+    nonmineCount() {
+      return this.boardConfig.flat().filter(cell => cell !== 'X').length;
+    }
+
     progress() {
       return this.boardView.flat().filter(cell => cell !== null).length;
     }
