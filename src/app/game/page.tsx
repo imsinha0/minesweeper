@@ -50,6 +50,17 @@ export default function Game() {
             console.error("Error parsing game board:", error);
           }
         }
+
+        if (data?.status === "completed") {
+          const winner = data.winner;
+          toast({
+            title: `Game over! ${winner === userId ? "You won!" : "You lost!"}`,
+          });
+
+          setTimeout(() => {
+            router.push("/");
+          }, 2000);
+        }
       } catch (error) {
         console.error("Error loading game board:", error);
       }

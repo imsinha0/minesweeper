@@ -44,6 +44,8 @@ export default function Room() {
             router.push(`/game?id=${roomId}`);
           }
         }
+
+
       });
 
       // Add the current user to the room when the component mounts
@@ -69,39 +71,43 @@ export default function Room() {
               await updateDoc(roomRef, {
                 players: playersList,
               });
+              console.log(playersList);
             }
           }
         }
       };
 
       addCurrentUserToRoom();
-
-      // Cleanup logic
-    return () => {
-      const cleanup = async () => {
-        const roomRef = doc(db, "games", roomId);
-        const roomDoc = await getDoc(roomRef);
-        if (roomDoc.exists()) {
-          const roomData = roomDoc.data();
-          // Only remove the user if the game has not started
-          if (roomData.status !== "started") {
-            removeUserFromRoom();
+      
+        // Remove user from room on unload
+        const handleUnload = async () => {
+          const roomRef = doc(db, "games", roomId);
+          const roomDoc = await getDoc(roomRef);
+          if (roomDoc.exists()) {
+            const roomData = roomDoc.data();
+            if (roomData.status !== "started") {
+              removeUserFromRoom();
+            }
           }
-        }
-      };
-      cleanup();
-      unsubscribe();
-    };
+        };
+    
+        window.addEventListener("beforeunload", handleUnload);
+    
+        // Cleanup function
+        return () => {
+          window.removeEventListener("beforeunload", handleUnload);
+          unsubscribe();
+        };
 
     }
   }, [roomId, userId, username, color]);
-
+    
   // start the game
 
   const startGame = async () => {
     const numRows = Number(gameSettings[0]);
     const numCols = Number(gameSettings[2]);
-    const numMines = Math.floor(2*Math.sqrt(numRows*numCols));
+    const numMines = Math.floor(Math.sqrt(numRows*numCols));
 
     if (roomId) {
       await updateDoc(doc(db, "games", roomId), {
@@ -112,8 +118,6 @@ export default function Room() {
     router.push(`/game?id=${roomId}`);
 
   };
-
-
 
 
   const handleClick = () => {
@@ -226,7 +230,7 @@ export default function Room() {
                 className="border p-2 rounded w-full text-sm text-gray-500"
               />
                   <Button onClick={handleClick} className="px-3 py-2 rounded w-32">
-                    {copied ? "Copied" : "Copy Link"}
+                    {copied ? "Copied!" : "Copy Link"}
                   </Button>
             </div>
           </div>
