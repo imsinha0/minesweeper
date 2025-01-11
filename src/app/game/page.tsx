@@ -50,17 +50,6 @@ export default function Game() {
             console.error("Error parsing game board:", error);
           }
         }
-
-        if (data?.status === "completed") {
-          const winner = data.winner;
-          toast({
-            title: `Game over! ${winner === userId ? "You won!" : "You lost!"}`,
-          });
-
-          setTimeout(() => {
-            router.push("/");
-          }, 2000);
-        }
       } catch (error) {
         console.error("Error loading game board:", error);
       }
@@ -80,6 +69,17 @@ export default function Game() {
       if (data?.players) {
         setPlayersProgress(data.players);
       }
+      if (data?.status === "completed") {
+        const winner = data.winner;
+        toast({
+          title: `Game over! ${winner === userId ? "You won!" : "You lost!"}`,
+        });
+
+        setTimeout(() => {
+          router.push("/");
+        }, 2000);
+      }
+      
     });
   
     return () => {
@@ -124,7 +124,6 @@ export default function Game() {
     }
 
     if(revealedSquares === board.nonmineCount()) {
-      // Set game status to completed, set game winner, popover to show winner to all players
       const roomRef = doc(db, "games", roomId);
 
       // Update the Firestore database with game completion and winner details

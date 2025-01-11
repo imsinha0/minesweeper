@@ -112,7 +112,7 @@ export default function Room() {
     if (roomId) {
       await updateDoc(doc(db, "games", roomId), {
         status: "started",
-        gameBoard: JSON.stringify(createMinesweeperBoard(numRows, numCols, numMines)),
+        gameBoard: JSON.stringify(createMinesweeperBoard(numRows, numCols, 1)),
       });
     }
     router.push(`/game?id=${roomId}`);
