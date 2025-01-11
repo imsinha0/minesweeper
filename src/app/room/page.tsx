@@ -15,6 +15,7 @@ export default function Room() {
   const roomId = searchParams.get("id");
   const [players, setPlayers] = useState<{ userID: string; username: string; playerColor: string }[]>([]);
   const [gameSettings, setGameSettings] = useState<string>("7x7");
+  const [numRounds, setRounds] = useState<number>(1);
   const [roomUrl, setRoomUrl] = useState("");
   const [hostID, setHostID] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -38,6 +39,7 @@ export default function Room() {
           setPlayers(validPlayers);
 
           if (data.gameMode) setGameSettings(data.gameMode);
+          if (data.numGames) setRounds(data.numRounds);
           if (data.hostId) setHostID(data.hostId);
 
           if (data.status === "started") {
@@ -109,10 +111,17 @@ export default function Room() {
     const numCols = Number(gameSettings[2]);
     const numMines = Math.floor(Math.sqrt(numRows*numCols));
 
+    //create list of gameboards with numRounds number of boards
+    const gameBoards = [];
+    for (let i = 0; i < numRounds; i++) {
+      gameBoards.push(createMinesweeperBoard(numRows, numCols, numMines));
+    }
+
     if (roomId) {
       await updateDoc(doc(db, "games", roomId), {
         status: "started",
-        gameBoard: JSON.stringify(createMinesweeperBoard(numRows, numCols, 1)),
+        gameBoard: JSON.stringify(gameBoards),
+        numRounds: numRounds
       });
     }
     router.push(`/game?id=${roomId}`);
@@ -214,8 +223,26 @@ export default function Room() {
                   <span className="text-gray-700">{mode}</span>
                 </label>
               ))}
-
-
+              </div>
+              <div>
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="number"
+                    value={numRounds}
+                    onChange={(e) => {
+                      if (isHost) {
+                        // bound between 1 and 10
+                        if (Number(e.target.value) < 1) e.target.value = "1";
+                        if (Number(e.target.value) > 10) e.target.value = "10";
+                        setRounds(Number(e.target.value));
+                        updateDoc(doc(db, "games", roomId), { numRounds: Number(e.target.value) });
+                      }
+                    }}
+                    disabled={!isHost}
+                    className={`accent-black ${!isHost ? "cursor-not-allowed" : ""}`}
+                  />
+                  <span className="text-gray-700">Number of Rounds</span>
+                </label>
 
               </div>
             </div>

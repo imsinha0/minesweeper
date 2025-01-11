@@ -9,10 +9,13 @@ import { Board } from "@/utils/minesweeper";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/context/UserContext";
+import { Dialog, DialogOverlay, DialogTitle, DialogContent, DialogHeader } from "@/components/ui/dialog";
+
 
 interface PlayerProgress {
   username: string;
   playerColor: string;
+  userId: string;
   revealedSquares: number;
 }
 
@@ -23,6 +26,8 @@ export default function Game() {
   const roomId = searchParams.get("id");
   const router = useRouter();
   const [playersProgress, setPlayersProgress] = useState<PlayerProgress[]>([]);
+  const [winnerId, setWinnerId] = useState<string | null>(null);
+  const [showDialog, setShowDialog] = useState(false);
 
   const { userId } = useUser();
   const { toast } = useToast();
@@ -70,22 +75,29 @@ export default function Game() {
         setPlayersProgress(data.players);
       }
       if (data?.status === "completed") {
-        const winner = data.winner;
-        toast({
-          title: `Game over! ${winner === userId ? "You won!" : "You lost!"}`,
-        });
 
-        setTimeout(() => {
-          router.push("/");
-        }, 2000);
+        setWinnerId(data.winner);
       }
-      
+
     });
   
     return () => {
       unsubscribe();
     };
   }, [roomId]);
+
+  useEffect(() => {
+    if (winnerId) {
+      setShowDialog(true);
+      console.log("Winner ID: ", winnerId);
+      console.log("Players Progress: ", playersProgress);
+      console.log(
+        "Winner Username:",
+        playersProgress.find((player) => player.userID === winnerId)?.username
+      );  
+    }
+  }, [winnerId]);
+
 
   const forceRerender = () => {setRerender((prev) => prev + 1); console.log("Rerendered");};
 
@@ -159,6 +171,10 @@ export default function Game() {
     }
   };
 
+  const handleGoBack = () => {
+    router.push("/");
+  };
+
   const renderBoard = () => {
     if (!board) return null;
 
@@ -178,6 +194,40 @@ export default function Game() {
 
   return (
     <div className="flex px-40">
+
+<Dialog open={showDialog}>
+        <DialogOverlay className="bg-black/50" />
+        <DialogContent className="fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] w-[90vw] max-w-[500px] rounded-lg bg-white p-6 shadow-lg">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-semibold mb-4">
+              Game Over
+            </DialogTitle>
+            <p className="mb-4">
+              Winner:{" "}
+              {playersProgress.find((player) => player.userID === winnerId)?.username}
+              
+            </p>
+            <h3 className="text-xl mb-2">Other Players:</h3>
+            <ul>
+              {playersProgress
+                .filter((player) => player.userID !== winnerId)
+                .map((player, index) => (
+                  <li key={index} style={{ color: player.playerColor }}>
+                    {player.username}
+                  </li>
+                ))}
+            </ul>
+            <button
+              onClick={handleGoBack}
+              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+            >
+              Go Back to Main Page
+            </button>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+
+
       <div className="flex h-[40vh] w-full">
         {/* Left Sidebar for Chatbox */}
         <div className="w-1/4 p-4">

@@ -80,13 +80,14 @@ export default function GameTable() {
   };
 
   return (
-    <Table>
+    <div className="max-h-[80vh] overflow-y-auto">
+    <Table className="w-full">
       <TableHeader>
         <TableRow>
           <TableHead className="w-[100px]">Host</TableHead>
           <TableHead>Players</TableHead>
           <TableHead>Status</TableHead>
-          <TableHead className="text-right">Created</TableHead>
+          <TableHead className="text-right pr">Created</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -100,5 +101,6 @@ export default function GameTable() {
         ))}
       </TableBody>
     </Table>
+    </div>
   );
 }
