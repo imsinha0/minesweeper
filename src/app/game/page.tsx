@@ -18,6 +18,7 @@ interface PlayerProgress {
   userId: string;
   currentRound: number;
   revealedSquares: number;
+  playerRating: number;
 }
 
 export default function Game() {
@@ -147,6 +148,9 @@ export default function Game() {
           status: "completed",
           winner: userId, // Assuming the current user who made the winning move is the winner
         });
+
+        // need way to calculate rating changes, show it, and store it in the database
+
       } else {
         setCurrentRound((prev) => prev + 1);
         forceRerender();
@@ -269,7 +273,7 @@ export default function Game() {
             ) : (
               playersProgress.map((player, index) => (
                 <div key={index} className="mb-4 p-2 border rounded">
-                  <h3 className="text-lg" style={{ color: player.playerColor }}>{player.username}</h3>
+                  <h3 className="text-lg" style={{ color: player.playerColor }}>{player.username} ({player.playerRating})</h3>
                   <p>Round: {player.currentRound? player.currentRound : 1}</p>
                   <p>Revealed Squares: {player.revealedSquares}</p>
                   <Progress

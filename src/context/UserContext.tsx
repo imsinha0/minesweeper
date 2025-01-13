@@ -11,14 +11,18 @@ interface UserContextType {
   color: string;
   updateUsername: (newUsername: string) => Promise<void>;
   updateUserColor: (newColor: string) => Promise<void>;
+  updateUserRating: (newRating: number) => Promise<void>;
+  rating: number;
 }
 
 const UserContext = createContext<UserContextType>({
   userId: "",
   username: "",
   color: "",
+  rating: 800,
   updateUsername: async () => {},
   updateUserColor: async () => {},
+  updateUserRating: async () => {},
 });
 
 // Helper to generate random username
@@ -73,6 +77,19 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Method to update user rating in Firestore and local state
+  const updateUserRating = async (newRating: number) => {
+    if (!userId) return;
+
+    try {
+      const userDocRef = doc(db, "users", userId);
+      await updateDoc(userDocRef, { rating: newRating });
+      setRating(newRating);
+    } catch (error) {
+      console.error("Failed to update user rating:", error);
+    }
+  };
+
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
 
@@ -85,6 +102,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUserId(userId);
           setUsername(userData.username);
           setColor(userData.color);
+          setRating(userData.rating);
         } else {
           // If stored user doesn't exist, create a new one
           await createNewUser();
@@ -106,7 +124,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         color: newColor,
         createdAt: new Date(),
         rating: rating,
-        
       });
 
       const newUserId = docRef.id;
@@ -130,8 +147,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       userId, 
       username, 
       color, 
+      rating,
       updateUsername,
-      updateUserColor 
+      updateUserColor,
+      updateUserRating,
     }}>
       {children}
     </UserContext.Provider>

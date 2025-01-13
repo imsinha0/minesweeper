@@ -13,7 +13,7 @@ import {createMinesweeperBoard} from "@/utils/minesweeper";
 export default function Room() {
   const searchParams = useSearchParams();
   const roomId = searchParams.get("id");
-  const [players, setPlayers] = useState<{ userID: string; username: string; playerColor: string }[]>([]);
+  const [players, setPlayers] = useState<{ userID: string; username: string; playerColor: string, playerRating: number}[]>([]);
   const [gameSettings, setGameSettings] = useState<string>("7x7");
   const [numRounds, setRounds] = useState<number>(1);
   const [roomUrl, setRoomUrl] = useState("");
@@ -23,7 +23,7 @@ export default function Room() {
   
 
 
-  const { userId, username, color } = useUser();
+  const { userId, username, color, rating } = useUser();
 
   useEffect(() => {
     if (roomId) {
@@ -68,6 +68,7 @@ export default function Room() {
                 userID: userId,
                 username: username,
                 playerColor: color || "#000000", // Use the color from context
+                playerRating:  rating || 800
               });
 
               await updateDoc(roomRef, {
@@ -177,7 +178,7 @@ export default function Room() {
                   players.map((player, index) => (
                     <div key={index} className="flex items-center space-x-2 mb-2">
                       <span className="font-semibold" style={{ color: player.playerColor }}>
-                        {player.username}
+                        {player.username} ({player.playerRating})
                       </span>
                       {hostID === player.userID && <span className="text-xs text-gray-500">Host</span>}
                       {isHost && (
