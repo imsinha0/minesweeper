@@ -16,11 +16,13 @@ interface PlayerProgress {
   username: string;
   playerColor: string;
   userId: string;
+  currentRound: number;
   revealedSquares: number;
 }
 
 export default function Game() {
-  const [board, setBoard] = useState<Board | undefined>(undefined);
+  const [boards, setBoards] = useState<Board[] | undefined>(undefined);
+  const [currentRound, setCurrentRound] = useState(1);
   const searchParams = useSearchParams();
   const [_, setRerender] = useState(0);
   const roomId = searchParams.get("id");
@@ -48,9 +50,14 @@ export default function Game() {
         const data = roomSnap.data();
         if (data?.gameBoard) {
           try {
-            const parsedBoard = JSON.parse(data.gameBoard);
-            const newBoard = new Board(parsedBoard);
-            setBoard(newBoard);
+            const parsedBoards = JSON.parse(data.gameBoard);
+
+            const newBoard = [];
+            for (let i = 0; i < parsedBoards.length; i++) {
+              newBoard.push(new Board(parsedBoards[i]));
+            }
+            setBoards(newBoard);
+
           } catch (error) {
             console.error("Error parsing game board:", error);
           }
@@ -62,6 +69,8 @@ export default function Game() {
   
     loadGameBoard();
   }, [roomId]);
+
+  const numRounds = boards?.length;
   
   useEffect(() => {
     if (!roomId) return;
@@ -89,24 +98,19 @@ export default function Game() {
   useEffect(() => {
     if (winnerId) {
       setShowDialog(true);
-      console.log("Winner ID: ", winnerId);
-      console.log("Players Progress: ", playersProgress);
-      console.log(
-        "Winner Username:",
-        playersProgress.find((player) => player.userID === winnerId)?.username
-      );  
     }
   }, [winnerId]);
 
 
+
   const forceRerender = () => {setRerender((prev) => prev + 1); console.log("Rerendered");};
 
-  const boardsize = board ? board.boardConfig.length : 0;
+  const boardsize = boards && boards[0] ? boards[0].boardConfig.length : 0;
 
   const updateProgress = async () => {
-    if (!roomId || !board || !userId) return;
+    if (!roomId || !boards || !userId) return;
 
-    const revealedSquares = board.progress();
+    const revealedSquares = boards[currentRound-1].progress();
     const roomRef = doc(db, "games", roomId);
 
     console.log("revealedSquares: ", revealedSquares);
@@ -123,7 +127,7 @@ export default function Game() {
 
       const updatedPlayers = players.map((player: any) => {
         if (player.userID === userId) {
-          return { ...player, revealedSquares };
+          return { ...player, revealedSquares, currentRound};
         }
         return player;
       });
@@ -135,14 +139,18 @@ export default function Game() {
       console.error("Error updating player progress:", error);
     }
 
-    if(revealedSquares === board.nonmineCount()) {
-      const roomRef = doc(db, "games", roomId);
-
-      // Update the Firestore database with game completion and winner details
-      await updateDoc(roomRef, {
-        status: "completed",
-        winner: userId, // Assuming the current user who made the winning move is the winner
-      });
+    if(revealedSquares === boards[currentRound - 1].nonmineCount()) {
+      if (currentRound == numRounds){
+        const roomRef = doc(db, "games", roomId);
+        // Update the Firestore database with game completion and winner details
+        await updateDoc(roomRef, {
+          status: "completed",
+          winner: userId, // Assuming the current user who made the winning move is the winner
+        });
+      } else {
+        setCurrentRound((prev) => prev + 1);
+        forceRerender();
+      }
       
     }
 
@@ -151,7 +159,7 @@ export default function Game() {
 
   const handleSquareClick = async (row: number, col: number) => {
   
-    const result = board?.reveal(row, col);
+    const result = boards && boards[currentRound-1]?.reveal(row, col);
     forceRerender();
 
     if(result === "done") {return;}
@@ -162,7 +170,9 @@ export default function Game() {
       });
   
       setTimeout(() => {
-        board?.resetBoard();
+        if (boards && boards[currentRound-1]) {
+          boards[currentRound-1].resetBoard();
+        }
         forceRerender();
         updateProgress();
       }, 2000);
@@ -176,9 +186,9 @@ export default function Game() {
   };
 
   const renderBoard = () => {
-    if (!board) return null;
+    if (!boards) return null;
 
-    const currentView = board.currentView();
+    const currentView = boards[currentRound-1].currentView();
     return currentView.map((rowArray, row) =>
       rowArray.map((value, col) => (
         <div
@@ -245,7 +255,7 @@ export default function Game() {
                 gridTemplateColumns: `repeat(${boardsize}, 1fr)`,
               }}
             >
-              {board ? renderBoard() : <p>Loading game board...</p>}
+              {boards ? renderBoard() : <p>Loading game board...</p>}
             </div>
           </div>
         </div>
@@ -260,10 +270,11 @@ export default function Game() {
               playersProgress.map((player, index) => (
                 <div key={index} className="mb-4 p-2 border rounded">
                   <h3 className="text-lg" style={{ color: player.playerColor }}>{player.username}</h3>
+                  <p>Round: {player.currentRound? player.currentRound : 1}</p>
                   <p>Revealed Squares: {player.revealedSquares}</p>
                   <Progress
                     value={player.revealedSquares}
-                    max={board?.nonmineCount()}
+                    max={boards ? boards[currentRound - 1]?.nonmineCount() : 1}
                   />
                 </div>
               ))

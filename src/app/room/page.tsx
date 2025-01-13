@@ -114,7 +114,7 @@ export default function Room() {
     //create list of gameboards with numRounds number of boards
     const gameBoards = [];
     for (let i = 0; i < numRounds; i++) {
-      gameBoards.push(createMinesweeperBoard(numRows, numCols, numMines));
+      gameBoards.push(createMinesweeperBoard(numRows, numCols, 1));
     }
 
     if (roomId) {

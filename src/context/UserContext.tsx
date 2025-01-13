@@ -45,6 +45,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userId, setUserId] = useState<string>("");
   const [username, setUsername] = useState<string>("");
   const [color, setColor] = useState<string>("");
+  const [rating, setRating] = useState<number>(800);
 
   // Method to update username in Firestore and local state
   const updateUsername = async (newUsername: string) => {
@@ -98,11 +99,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const newUsername = generateRandomUsername();
       const newColor = generateRandomDarkColor();
       const usersCollectionRef = collection(db, "users");
+      const rating = 800;
 
       const docRef = await addDoc(usersCollectionRef, {
         username: newUsername,
         color: newColor,
         createdAt: new Date(),
+        rating: rating,
+        
       });
 
       const newUserId = docRef.id;
@@ -110,6 +114,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUserId(newUserId);
       setUsername(newUsername);
       setColor(newColor);
+      setRating(rating);
+
     };
 
     if (storedUserId) {
